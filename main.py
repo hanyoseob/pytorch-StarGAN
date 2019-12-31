@@ -13,7 +13,7 @@ cudnn.fastest = True
 parser = argparse.ArgumentParser(description='Train the StarGAN network',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--gpu_ids', default='-1', dest='gpu_ids')
+parser.add_argument('--gpu_ids', default='0', dest='gpu_ids')
 
 parser.add_argument('--mode', default='train', choices=['train', 'test'], dest='mode')
 parser.add_argument('--train_continue', default='off', choices=['on', 'off'], dest='train_continue')
@@ -29,7 +29,7 @@ parser.add_argument('--dir_data', default='../datasets', dest='dir_data')
 parser.add_argument('--dir_result', default='./result', dest='dir_result')
 
 parser.add_argument('--num_epoch', type=int,  default=300, dest='num_epoch')
-parser.add_argument('--batch_size', type=int, default=1, dest='batch_size')
+parser.add_argument('--batch_size', type=int, default=4, dest='batch_size')
 
 parser.add_argument('--lr_G', type=float, default=2e-4, dest='lr_G')
 parser.add_argument('--lr_D', type=float, default=2e-4, dest='lr_D')
@@ -65,7 +65,7 @@ parser.add_argument('--nch_ker', type=int, default=64, dest='nch_ker')
 
 parser.add_argument('--data_type', default='float32', dest='data_type')
 
-parser.add_argument('--nblk', type=int, default=3, dest='nblk')
+parser.add_argument('--nblk', type=int, default=6, dest='nblk')
 parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the CelebA dataset',
                     default=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Male', 'Young'], dest='attrs')
 

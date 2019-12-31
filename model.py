@@ -133,14 +133,14 @@ class Discriminator(nn.Module):
         dsc += [CNR2d(1 * self.nch_in, 1 * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.2)]
 
         for i in range(1, self.nrepeat):
-            dsc += [CNR2d((2**i) * self.nch_ker, (2**(i+1)) * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.2)]
+            dsc += [CNR2d((2**(i-1)) * self.nch_ker, (2**i) * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.2)]
 
         self.dsc = nn.Sequential(*dsc)
 
-        self.dsc_src = CNR2d((2**self.nrepeat) * self.nch_ker, 1, kernel_size=4, stride=1, padding=1, norm=[], relu=[], bias=False)
+        self.dsc_src = CNR2d((2**(self.nrepeat-1)) * self.nch_ker, 1, kernel_size=4, stride=1, padding=1, norm=[], relu=[], bias=False)
         if ncls:
             kernel_size = (int(ny_in/(2**self.nrepeat)), int(nx_in/(2**self.nrepeat)))
-            self.dsc_cls = CNR2d((2**self.nrepeat) * self.nch_ker, self.ncls, kernel_size=kernel_size, stride=1, padding=0, norm=[], relu=[], bias=False)
+            self.dsc_cls = CNR2d((2**(self.nrepeat-1)) * self.nch_ker, self.ncls, kernel_size=kernel_size, stride=1, padding=0, norm=[], relu=[], bias=False)
 
     def forward(self, x):
 
