@@ -29,7 +29,7 @@ parser.add_argument('--dir_data', default='../datasets', dest='dir_data')
 parser.add_argument('--dir_result', default='./result', dest='dir_result')
 
 parser.add_argument('--num_epoch', type=int,  default=300, dest='num_epoch')
-parser.add_argument('--batch_size', type=int, default=4, dest='batch_size')
+parser.add_argument('--batch_size', type=int, default=16, dest='batch_size')
 
 parser.add_argument('--lr_G', type=float, default=2e-4, dest='lr_G')
 parser.add_argument('--lr_D', type=float, default=2e-4, dest='lr_D')
@@ -49,16 +49,16 @@ parser.add_argument('--wgt_gp', type=float, default=1e1, dest='wgt_gp')
 parser.add_argument('--optim', default='adam', choices=['sgd', 'adam', 'rmsprop'], dest='optim')
 parser.add_argument('--beta1', default=0.5, dest='beta1')
 
-parser.add_argument('--ny_in', type=int, default=256, dest='ny_in')
-parser.add_argument('--nx_in', type=int, default=256, dest='nx_in')
-parser.add_argument('--nch_in', type=int, default=3, dest='nch_in')
-
-parser.add_argument('--ny_load', type=int, default=286, dest='ny_load')
-parser.add_argument('--nx_load', type=int, default=286, dest='nx_load')
+parser.add_argument('--ny_load', type=int, default=178, dest='ny_load')
+parser.add_argument('--nx_load', type=int, default=178, dest='nx_load')
 parser.add_argument('--nch_load', type=int, default=3, dest='nch_load')
 
-parser.add_argument('--ny_out', type=int, default=256, dest='ny_out')
-parser.add_argument('--nx_out', type=int, default=256, dest='nx_out')
+parser.add_argument('--ny_in', type=int, default=128, dest='ny_in')
+parser.add_argument('--nx_in', type=int, default=128, dest='nx_in')
+parser.add_argument('--nch_in', type=int, default=3, dest='nch_in')
+
+parser.add_argument('--ny_out', type=int, default=128, dest='ny_out')
+parser.add_argument('--nx_out', type=int, default=128, dest='nx_out')
 parser.add_argument('--nch_out', type=int, default=3, dest='nch_out')
 
 parser.add_argument('--nch_ker', type=int, default=64, dest='nch_ker')
@@ -68,6 +68,8 @@ parser.add_argument('--data_type', default='float32', dest='data_type')
 parser.add_argument('--nblk', type=int, default=6, dest='nblk')
 parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the CelebA dataset',
                     default=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Male', 'Young'], dest='attrs')
+
+parser.add_argument('--ncritic', type=int, default=5, dest='ncritic')
 
 PARSER = Parser(parser)
 

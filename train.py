@@ -3,6 +3,8 @@ from dataset import *
 
 import itertools
 
+from statistics import mean
+
 import torch
 import torch.nn as nn
 
@@ -63,6 +65,8 @@ class Train:
         self.nblk = args.nblk
         self.attrs = args.attrs
         self.ncls = len(self.attrs)
+
+        self.ncritic = args.ncritic
 
         if self.gpu_ids and torch.cuda.is_available():
             self.device = torch.device("cuda:%d" % self.gpu_ids[0])
@@ -145,6 +149,8 @@ class Train:
         attrs = self.attrs
         ncls = self.ncls
 
+        ncritic = self.ncritic
+
         ## setup dataset
         dir_chck = os.path.join(self.dir_checkpoint, self.scope, name_data)
 
@@ -152,7 +158,7 @@ class Train:
 
         dir_log_train = os.path.join(self.dir_log, self.scope, name_data)
 
-        transform_train = transforms.Compose([Normalize(), RandomFlip(), Rescale((self.ny_load, self.nx_load)), RandomCrop((self.ny_in, self.nx_in)), ToTensor()])
+        transform_train = transforms.Compose([CenterCrop((self.ny_load, self.nx_load)), Normalize(), RandomFlip(), Rescale((self.ny_in, self.nx_in)), ToTensor()])
         transform_inv = transforms.Compose([ToNumpy(), Denomalize()])
 
         dataset_train = Dataset(dir_data_train, data_type=self.data_type, transform=transform_train, attrs=attrs)
@@ -210,13 +216,13 @@ class Train:
             netG.train()
             netD.train()
 
-            loss_G_src_train = 0
-            loss_G_cls_train = 0
-            loss_G_rec_train = 0
+            loss_G_src_train = []
+            loss_G_cls_train = []
+            loss_G_rec_train = []
 
-            loss_D_src_train = 0
-            loss_D_cls_train = 0
-            loss_D_gp_train = 0
+            loss_D_src_train = []
+            loss_D_cls_train = []
+            loss_D_gp_train = []
 
             for i, data in enumerate(loader_train, 1):
                 def should(freq):
@@ -267,35 +273,36 @@ class Train:
                 loss_D.backward()
                 optimD.step()
 
-                # backward netG
-                set_requires_grad(netD, False)
-                optimG.zero_grad()
+                if (i - 1) % ncritic == 0:
+                    # backward netG
+                    set_requires_grad(netD, False)
+                    optimG.zero_grad()
 
-                src_out, cls_out = netD(output)
+                    src_out, cls_out = netD(output)
 
-                loss_G_src = fn_SRC(src_out, torch.ones_like(src_out))
-                loss_G_cls = fn_CLS(cls_out, label_out.view(label_out.size(0), label_out.size(1), 1, 1))
-                loss_G_rec = fn_REC(input, recon)
+                    loss_G_src = fn_SRC(src_out, torch.ones_like(src_out))
+                    loss_G_cls = fn_CLS(cls_out, label_out.view(label_out.size(0), label_out.size(1), 1, 1))
+                    loss_G_rec = fn_REC(input, recon)
 
-                loss_G = loss_G_src + wgt_cls * loss_G_cls + wgt_rec * loss_G_rec
+                    loss_G = loss_G_src + wgt_cls * loss_G_cls + wgt_rec * loss_G_rec
 
-                loss_G.backward()
-                optimG.step()
+                    loss_G.backward()
+                    optimG.step()
 
-                # get losses
-                loss_G_src_train += loss_G_src.item()
-                loss_G_cls_train += loss_G_cls.item()
-                loss_G_rec_train += loss_G_rec.item()
+                    # get losses
+                    loss_G_src_train += [loss_G_src.item()]
+                    loss_G_cls_train += [loss_G_cls.item()]
+                    loss_G_rec_train += [loss_G_rec.item()]
 
-                loss_D_src_train += loss_D_src.item()
-                loss_D_cls_train += loss_D_cls.item()
-                loss_D_gp_train += loss_D_gp.item()
+                loss_D_src_train += [loss_D_src.item()]
+                loss_D_cls_train += [loss_D_cls.item()]
+                loss_D_gp_train += [loss_D_gp.item()]
 
                 print('TRAIN: EPOCH %d: BATCH %04d/%04d: '
                       'G_src: %.4f G_cls: %.4f G_rec: %.4f D_src: %.4f D_cls: %.4f D_gp: %.4f'
                       % (epoch, i, num_batch_train,
-                         loss_G_src_train / i, loss_G_cls_train / i, loss_G_rec_train / i,
-                         loss_D_src_train / i, loss_D_cls_train / i, loss_D_gp_train / i))
+                         mean(loss_G_src_train), mean(loss_G_cls_train), mean(loss_G_rec_train),
+                         mean(loss_D_src_train), mean(loss_D_cls_train), mean(loss_D_gp_train)))
 
                 if should(num_freq_disp):
                     ## show output
@@ -307,12 +314,12 @@ class Train:
                     writer_train.add_images('output', output, num_batch_train * (epoch - 1) + i, dataformats='NHWC')
                     writer_train.add_images('recon', recon, num_batch_train * (epoch - 1) + i, dataformats='NHWC')
 
-            writer_train.add_scalar('loss_G_src', loss_G_src_train / num_batch_train, epoch)
-            writer_train.add_scalar('loss_G_cls', loss_G_cls_train / num_batch_train, epoch)
-            writer_train.add_scalar('loss_G_rec', loss_G_rec_train / num_batch_train, epoch)
-            writer_train.add_scalar('loss_D_src', loss_D_src_train / num_batch_train, epoch)
-            writer_train.add_scalar('loss_D_cls', loss_D_cls_train / num_batch_train, epoch)
-            writer_train.add_scalar('loss_D_gp', loss_D_gp_train / num_batch_train, epoch)
+            writer_train.add_scalar('loss_G_src', mean(loss_G_src_train), epoch)
+            writer_train.add_scalar('loss_G_cls', mean(loss_G_cls_train), epoch)
+            writer_train.add_scalar('loss_G_rec', mean(loss_G_rec_train), epoch)
+            writer_train.add_scalar('loss_D_src', mean(loss_D_src_train), epoch)
+            writer_train.add_scalar('loss_D_cls', mean(loss_D_cls_train), epoch)
+            writer_train.add_scalar('loss_D_gp', mean(loss_D_gp_train), epoch)
 
             # # update schduler
             # # schedG.step()
