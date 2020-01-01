@@ -273,6 +273,11 @@ class Train:
                 loss_D.backward()
                 optimD.step()
 
+                # get losses
+                loss_D_src_train += [loss_D_src.item()]
+                loss_D_cls_train += [loss_D_cls.item()]
+                loss_D_gp_train += [loss_D_gp.item()]
+
                 if (i - 1) % ncritic == 0:
                     # backward netG
                     set_requires_grad(netD, False)
@@ -293,10 +298,6 @@ class Train:
                     loss_G_src_train += [loss_G_src.item()]
                     loss_G_cls_train += [loss_G_cls.item()]
                     loss_G_rec_train += [loss_G_rec.item()]
-
-                loss_D_src_train += [loss_D_src.item()]
-                loss_D_cls_train += [loss_D_cls.item()]
-                loss_D_gp_train += [loss_D_gp.item()]
 
                 print('TRAIN: EPOCH %d: BATCH %04d/%04d: '
                       'G_src: %.4f G_cls: %.4f G_rec: %.4f D_src: %.4f D_cls: %.4f D_gp: %.4f'
