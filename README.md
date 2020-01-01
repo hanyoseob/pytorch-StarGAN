@@ -17,3 +17,12 @@ Then, click http://localhost:[4 digit port number]
 
 * You can change [4 digit port number]
 * 4 digit port number = 6006 (default)
+
+## Keypoint
+
+1. Discriminator 
+    * Remove Instance Normalization
+      
+      If there is Instance Normalization, a generator is not trained.
+      
+    * Leaky ReLU rate changes from 0.2 to 0.01 
