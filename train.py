@@ -172,7 +172,7 @@ class Train:
         ## setup network
         # netG = UNet(nch_in + ncls, nch_out, nch_ker, norm)
         netG = ResNet(nch_in + ncls, nch_out, nch_ker, norm, nblk=self.nblk)
-        netD = Discriminator(nch_out, nch_ker, norm, ncls=ncls, ny_in=self.ny_out, nx_in=self.nx_out)
+        netD = Discriminator(nch_out, nch_ker, [], ncls=ncls, ny_in=self.ny_out, nx_in=self.nx_out)
         
         init_net(netG, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
         init_net(netD, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
@@ -229,8 +229,10 @@ class Train:
                     return freq > 0 and (i % freq == 0 or i == num_batch_train)
 
                 input = data[0]
-
                 label_in = data[1]
+
+                label_in = label_in.view(label_in.size(0), label_in.size(1), 1, 1)
+                # label_out = torch.randint(0, 2, label_in.shape).float()
                 label_out = label_in[torch.randperm(label_in.size(0))]
 
                 domain_in = get_domain(input, label_in)
@@ -266,6 +268,8 @@ class Train:
                 loss_D_cls_in = fn_CLS(cls_in, label_in.view(label_in.size(0), label_in.size(1), 1, 1))
                 loss_D_cls_out = fn_CLS(cls_out, label_out.view(label_out.size(0), label_out.size(1), 1, 1))
                 loss_D_cls = 0.5 * (loss_D_cls_in + loss_D_cls_out)
+                # loss_D_cls_in = fn_CLS(cls_in, label_in)
+                # loss_D_cls = loss_D_cls_in
 
                 loss_D_gp = fn_GP(src_out_, output_)
 
@@ -281,7 +285,7 @@ class Train:
                     src_out, cls_out = netD(output)
 
                     loss_G_src = fn_SRC(src_out, torch.ones_like(src_out))
-                    loss_G_cls = fn_CLS(cls_out, label_out.view(label_out.size(0), label_out.size(1), 1, 1))
+                    loss_G_cls = fn_CLS(cls_out, label_out)
                     loss_G_rec = fn_REC(input, recon)
 
                     loss_G = loss_G_src + wgt_cls * loss_G_cls + wgt_rec * loss_G_rec
@@ -431,7 +435,6 @@ class Train:
 
 def get_domain(input, label):
     domain = label.clone()
-    domain = domain.view((domain.size(0), domain.size(1), 1, 1))
     domain = domain.repeat(1, 1, input.size(2), input.size(3))
 
     return domain

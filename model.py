@@ -130,10 +130,10 @@ class Discriminator(nn.Module):
             self.bias = True
 
         dsc = []
-        dsc += [CNR2d(1 * self.nch_in, 1 * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.2)]
+        dsc += [CNR2d(1 * self.nch_in, 1 * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.01)]
 
         for i in range(1, self.nrepeat):
-            dsc += [CNR2d((2**(i-1)) * self.nch_ker, (2**i) * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.2)]
+            dsc += [CNR2d((2**(i-1)) * self.nch_ker, (2**i) * self.nch_ker, kernel_size=4, stride=2, padding=1, norm=self.norm, relu=0.01)]
 
         self.dsc = nn.Sequential(*dsc)
 
