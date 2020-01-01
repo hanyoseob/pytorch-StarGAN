@@ -251,7 +251,6 @@ class Train:
                 set_requires_grad(netD, True)
                 optimD.zero_grad()
 
-                # backward netD
                 src_in, cls_in = netD(input)
                 src_out, cls_out = netD(output.detach())
 
