@@ -257,6 +257,7 @@ class Train:
                 src_in, cls_in = netD(input)
                 src_out, cls_out = netD(output.detach())
 
+                # Calculate Gradient Penalty term
                 alpha = torch.rand(input.size(0), 1, 1, 1).to(self.device)
                 output_ = (alpha * input + (1 - alpha) * output.detach()).requires_grad_(True)
                 src_out_, _ = netD(output_)
