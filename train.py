@@ -251,6 +251,7 @@ class Train:
 
                 # backward netD
                 set_requires_grad(netD, True)
+                # optimG.zero_grad()
                 optimD.zero_grad()
 
                 src_in, cls_in = netD(input)
@@ -260,16 +261,21 @@ class Train:
                 output_ = (alpha * input + (1 - alpha) * output.detach()).requires_grad_(True)
                 src_out_, _ = netD(output_)
 
+                # BCE loss
                 loss_D_src_in = fn_SRC(src_in, torch.ones_like(src_in))
                 loss_D_src_out = fn_SRC(src_out, torch.zeros_like(src_out))
+                # WGAN loss
+                # loss_D_src_in = - torch.mean(src_in)
+                # loss_D_src_out = torch.mean(src_out)
                 loss_D_src = 0.5 * (loss_D_src_in + loss_D_src_out)
 
-                loss_D_cls_in = fn_CLS(cls_in, label_in.view(label_in.size(0), label_in.size(1), 1, 1))
-                loss_D_cls_out = fn_CLS(cls_out, label_out.view(label_out.size(0), label_out.size(1), 1, 1))
-                loss_D_cls = 0.5 * (loss_D_cls_in + loss_D_cls_out)
                 # loss_D_cls_in = fn_CLS(cls_in, label_in)
-                # loss_D_cls = loss_D_cls_in
+                # loss_D_cls_out = fn_CLS(cls_out, label_out)
+                # loss_D_cls = 0.5 * (loss_D_cls_in + loss_D_cls_out)
+                loss_D_cls_in = fn_CLS(cls_in, label_in)
+                loss_D_cls = loss_D_cls_in
 
+                # Gradient Penalty loss
                 loss_D_gp = fn_GP(src_out_, output_)
 
                 loss_D = loss_D_src + wgt_cls * loss_D_cls + wgt_gp * loss_D_gp
@@ -285,10 +291,12 @@ class Train:
                     # backward netG
                     set_requires_grad(netD, False)
                     optimG.zero_grad()
+                    # optimD.zero_grad()
 
                     src_out, cls_out = netD(output)
 
                     loss_G_src = fn_SRC(src_out, torch.ones_like(src_out))
+                    # loss_G_src = - torch.mean(src_out)
                     loss_G_cls = fn_CLS(cls_out, label_out)
                     loss_G_rec = fn_REC(input, recon)
 

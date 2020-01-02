@@ -27,6 +27,7 @@ Then, click http://localhost:[4 digit port number]
       
     * Leaky ReLU rate changes from 0.2 to 0.01 
 
-    * Use WGAN-GP
+    * Use WGAN-GP loss
     
+    * Class Discriminator is only trained by Real Image.
       
