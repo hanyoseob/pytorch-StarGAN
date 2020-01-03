@@ -13,7 +13,7 @@ cudnn.fastest = True
 parser = argparse.ArgumentParser(description='Train the StarGAN network',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--gpu_ids', default='0', dest='gpu_ids')
+parser.add_argument('--gpu_ids', default='-1', dest='gpu_ids')
 
 parser.add_argument('--mode', default='train', choices=['train', 'test'], dest='mode')
 parser.add_argument('--train_continue', default='off', choices=['on', 'off'], dest='train_continue')

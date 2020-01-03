@@ -19,8 +19,19 @@ class Dataset(torch.utils.data.Dataset):
         self.attrs = attrs
         self.mode = mode
 
-        lines = [line.rstrip() for line in open(os.path.join(self.data_dir, 'list_attr_celeba.txt'), 'r')]
-        all_attr_names = lines[1].split()
+        data_name = data_dir.split('/')[-1]
+
+        if data_name == 'celeba':
+            lines = [line.rstrip() for line in open(os.path.join(self.data_dir, 'list_attr_celeba.txt'), 'r')]
+            all_attr_names = lines[1].split()
+            lines = lines[2:]
+
+        elif data_name == 'rafd':
+            lines = os.listdir(self.data_dir)
+            all_attr_names = ['angry', 'contemptuous', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+
+        np.random.seed(1234)
+        np.random.shuffle(lines)
 
         attr2idx = {}
         idx2attr = {}
@@ -31,26 +42,38 @@ class Dataset(torch.utils.data.Dataset):
         self.attr2idx = attr2idx
         self.idx2attr = idx2attr
 
-        lines = lines[2:]
-        np.random.seed(1234)
-        np.random.shuffle(lines)
-
         train_dataset = []
         test_dataset = []
-        for i, line in enumerate(lines):
-            split = line.split()
-            filename = split[0]
-            values = split[1:]
 
-            label = []
-            for attr_name in self.attrs:
-                idx = self.attr2idx[attr_name]
-                label.append(values[idx] == '1')
+        if data_name == 'celeba':
+            for i, line in enumerate(lines):
+                split = line.split()
+                filename = split[0]
+                values = split[1:]
 
-            if (i + 1) > 2000:
-                train_dataset.append([filename, label])
-            else:
-                test_dataset.append([filename, label])
+                label = []
+                for attr_name in self.attrs:
+                    idx = self.attr2idx[attr_name]
+                    label.append(values[idx] == '1')
+
+                if (i + 1) > 2000:
+                    train_dataset.append([filename, label])
+                else:
+                    test_dataset.append([filename, label])
+
+        elif data_name == 'rafd':
+            for i, line in enumerate(lines):
+                label = np.zeros(len(self.attrs), dtype=np.float32)
+                split = line.split('_')
+                filename = line
+                attr = split[4]
+
+                label[attr2idx[attr]] = 1
+
+                if (i + 1) <= 4000:
+                    train_dataset.append([filename, label])
+                else:
+                    test_dataset.append([filename, label])
 
         if self.mode == 'train':
             self.dataset = train_dataset

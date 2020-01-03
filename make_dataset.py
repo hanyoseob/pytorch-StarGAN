@@ -6,20 +6,44 @@ import matplotlib.pyplot as plt
 
 sz = 256
 
-str_dataset = {'train', 'val', 'test'}
+dir_data = '../datasets/rafd/'
+lines = os.listdir(dir_data)
 
-for phs in str_dataset:
+all_attr_names = ['angry', 'contemptuous', 'disgusted', 'fearful',
+                  'happy', 'neutral', 'sad', 'surprised']
 
-    dir_data = './data/facades/%s/' % phs
-    lst_data = os.listdir(dir_data)
+attr2idx = {}
+idx2attr = {}
 
-    lst_data.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+for i, attr_name in enumerate(all_attr_names):
+    attr2idx[attr_name] = i
+    idx2attr[i] = attr_name
 
-    for i_, lst_ in enumerate(lst_data):
-        data_ = plt.imread(os.path.join(dir_data, lst_))
+# self.attr2idx = attr2idx
+# self.idx2attr = idx2attr
 
-        label_ = data_[:, :sz, :]
-        input_ = data_[:, sz:, :]
+np.random.seed(1234)
+np.random.shuffle(lines)
 
-        np.save(os.path.join(dir_data, "label_%05d.npy" % i_), np.float32(label_))
-        np.save(os.path.join(dir_data, "input_%05d.npy" % i_), np.float32(input_))
+train_dataset = []
+
+for i, line in enumerate(lines):
+    label = np.zeros(len(all_attr_names), dtype=np.float32)
+    split = line.split('_')
+    filename = line
+    attr = split[4]
+
+    label[attr2idx[attr]] = 1
+
+    train_dataset.append([filename, label])
+
+print('make db')
+
+# for i_, lst_ in enumerate(lst_data):
+#     data_ = plt.imread(os.path.join(dir_data, lst_))
+#
+#     label_ = data_[:, :sz, :]
+#     input_ = data_[:, sz:, :]
+#
+#     np.save(os.path.join(dir_data, "label_%05d.npy" % i_), np.float32(label_))
+#     np.save(os.path.join(dir_data, "input_%05d.npy" % i_), np.float32(input_))
