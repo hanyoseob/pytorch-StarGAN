@@ -232,7 +232,6 @@ class Train:
                 label_in = data[1]
 
                 label_in = label_in.view(label_in.size(0), label_in.size(1), 1, 1)
-                # label_out = torch.randint(0, 2, label_in.shape).float()
                 label_out = label_in[torch.randperm(label_in.size(0))]
 
                 domain_in = get_domain(input, label_in)
@@ -266,13 +265,10 @@ class Train:
                 loss_D_src_in = fn_SRC(src_in, torch.ones_like(src_in))
                 loss_D_src_out = fn_SRC(src_out, torch.zeros_like(src_out))
                 # WGAN loss
-                # loss_D_src_in = - torch.mean(src_in)
-                # loss_D_src_out = torch.mean(src_out)
+                # loss_D_src_in = torch.mean(src_in)
+                # loss_D_src_out = -torch.mean(src_out)
                 loss_D_src = 0.5 * (loss_D_src_in + loss_D_src_out)
 
-                # loss_D_cls_in = fn_CLS(cls_in, label_in)
-                # loss_D_cls_out = fn_CLS(cls_out, label_out)
-                # loss_D_cls = 0.5 * (loss_D_cls_in + loss_D_cls_out)
                 loss_D_cls_in = fn_CLS(cls_in, label_in)
                 loss_D_cls = loss_D_cls_in
 
@@ -296,8 +292,10 @@ class Train:
 
                     src_out, cls_out = netD(output)
 
+                    # BCE Loss
                     loss_G_src = fn_SRC(src_out, torch.ones_like(src_out))
-                    # loss_G_src = - torch.mean(src_out)
+                    # WGAN Loss
+                    # loss_G_src = torch.mean(src_out)
                     loss_G_cls = fn_CLS(cls_out, label_out)
                     loss_G_rec = fn_REC(input, recon)
 
