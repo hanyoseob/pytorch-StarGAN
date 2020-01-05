@@ -1,39 +1,40 @@
 import os
 import numpy as np
+import torch
+import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 
-## setup scope title
-# scope = 'trans2dens_1linear_l2'
-scope = 'trans2dens_1linear_l1'
+# dir_result = './result/stargan/celeba/images'
+dir_result = './result/stargan/rafd/images'
+lst_result = os.listdir(dir_result)
 
-dir_output = os.path.join('./result', scope)
-dir_data = './data/'
+# np.random.shuffle(lst_result)
 
-num_train = 8000
-num_val = 1000
-num_test = 1000
+nx = 128
+ny = 128
+nch = 3
 
-## load list of output
-lst_output = os.listdir(dir_output)
-lst_output.sort(key=lambda l: int(''.join(filter(str.isdigit, l))))
+n = 8
+# m = 1 + 5
+m = 1 + 8
 
-fig, ax = plt.subplots()
+m_id = 50
 
-for i, name in enumerate(lst_output, num_train + num_val):
-    output = np.load(os.path.join(dir_output, name))
-    label = np.load(os.path.join(dir_data, 'label_%05d_1d.npy' % i))
+img = torch.zeros((n*m, ny, nx, nch))
 
-    ax.plot(output, 'b-')
-    ax.plot(label, 'r--')
+for i in range(m):
+    for j in range(n):
+        p = i + m*(j + m_id)
+        q = n * i + j
 
-    ax.set_xlim(0, 400)
-    ax.set_ylim(0, 40)
+        img[q, :, :, :] = torch.from_numpy(plt.imread(os.path.join(dir_result, lst_result[p]))[:, :, :nch])
 
-    ax.grid(True)
-    ax.set_ylabel('Density')
-    ax.set_xlabel('Radius')
-    ax.legend(('Output', 'Label'), loc='upper right')
-    plt.title('%04d / %04d' % (i - (num_train + num_val) + 1, num_test))
+img = img.permute((0, 3, 1, 2))
 
-    plt.pause(0.3)
-    plt.cla()
+plt.figure(figsize=(n, m))
+plt.axis("off")
+# plt.title("Generated Images")
+plt.imshow(np.transpose(vutils.make_grid(img, padding=2, normalize=True), (1, 2, 0)))
+
+plt.show()
+

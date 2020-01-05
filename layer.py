@@ -279,3 +279,12 @@ class GradientPaneltyLoss(nn.Module):
         dydx = dydx.view(dydx.size(0), -1)
         dydx_l2norm = torch.sqrt(torch.sum(dydx ** 2, dim=1))
         return torch.mean((dydx_l2norm - 1) ** 2)
+
+class CrossEntropyLoss(nn.Module):
+    def __init__(self):
+        super(CrossEntropyLoss, self).__init__()
+        self.loss = nn.CrossEntropyLoss()
+
+    def forward(self, input, target):
+        _, label = target.max(dim=1)
+        return self.loss(input, label.long())

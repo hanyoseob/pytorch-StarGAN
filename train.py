@@ -133,7 +133,6 @@ class Train:
 
         batch_size = self.batch_size
         device = self.device
-
         gpu_ids = self.gpu_ids
 
         nch_in = self.nch_in
@@ -163,7 +162,7 @@ class Train:
 
         dataset_train = Dataset(dir_data_train, data_type=self.data_type, transform=transform_train, attrs=attrs)
 
-        loader_train = torch.utils.data.DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=0)
+        loader_train = torch.utils.data.DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
 
         num_train = len(dataset_train)
 
@@ -185,7 +184,8 @@ class Train:
         if self.name_data == 'celeba':
             fn_CLS = nn.BCEWithLogitsLoss().to(device)   # L1
         else:
-            fn_CLS = nn.CrossEntropyLoss().to(device)  # L1
+            # fn_CLS = nn.CrossEntropyLoss().to(device)  # L1
+            fn_CLS = CrossEntropyLoss().to(device)  # L1
 
         paramsG = netG.parameters()
         paramsD = netD.parameters()
@@ -229,9 +229,7 @@ class Train:
                     return freq > 0 and (i % freq == 0 or i == num_batch_train)
 
                 input = data[0]
-                label_in = data[1]
-
-                label_in = label_in.view(label_in.size(0), label_in.size(1), 1, 1)
+                label_in = data[1].view(-1, ncls, 1, 1)
                 label_out = label_in[torch.randperm(label_in.size(0))]
 
                 domain_in = get_domain(input, label_in)
@@ -345,7 +343,8 @@ class Train:
     def test(self):
         mode = self.mode
 
-        batch_size = self.batch_size
+        # batch_size = self.batch_size
+        batch_size = 1
         device = self.device
         gpu_ids = self.gpu_ids
 
@@ -354,23 +353,34 @@ class Train:
         nch_ker = self.nch_ker
 
         norm = self.norm
-
         name_data = self.name_data
+
+        attrs = self.attrs
+        ncls = self.ncls
+
+        ncritic = self.ncritic
 
         ## setup dataset
         dir_chck = os.path.join(self.dir_checkpoint, self.scope, name_data)
 
-        dir_result = os.path.join(self.dir_result, self.scope)
+        dir_data_test = os.path.join(self.dir_data, name_data)
+
+        dir_result = os.path.join(self.dir_result, self.scope, name_data)
         dir_result_save = os.path.join(dir_result, 'images')
         if not os.path.exists(dir_result_save):
             os.makedirs(dir_result_save)
 
-        dir_data_test = os.path.join(self.dir_data, self.name_data, 'test')
+        # dir_data_test = os.path.join(self.dir_data, self.name_data, 'test')
 
-        transform_test = transforms.Compose([Normalize(), ToTensor()])
+        # transform_test = transforms.Compose([Normalize(), ToTensor()])
+        transform_test = transforms.Compose([CenterCrop((self.ny_load, self.nx_load)), Normalize(), RandomFlip(), Rescale((self.ny_in, self.nx_in)), ToTensor()])
         transform_inv = transforms.Compose([ToNumpy(), Denomalize()])
 
-        dataset_test = Dataset(dir_data_test, data_type=self.data_type, transform=transform_test)
+        # dataset_test = Dataset(dir_data_test, data_type=self.data_type, transform=transform_test)
+        #
+        # loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
+
+        dataset_test = Dataset(dir_data_test, data_type=self.data_type, transform=transform_test, attrs=attrs, mode='test')
 
         loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
 
@@ -379,65 +389,59 @@ class Train:
         num_batch_test = int((num_test / batch_size) + ((num_test % batch_size) != 0))
 
         ## setup network
-        # netG_a2b = UNet(nch_in, nch_out, nch_ker, norm)
-        # netG_b2a = UNet(nch_in, nch_out, nch_ker, norm)
-        netG_a2b = ResNet(nch_in, nch_out, nch_ker, norm, nblk=self.nblk)
-        netG_b2a = ResNet(nch_in, nch_out, nch_ker, norm, nblk=self.nblk)
+        # netG = UNet(nch_in + ncls, nch_out, nch_ker, norm)
+        netG = ResNet(nch_in + ncls, nch_out, nch_ker, norm, nblk=self.nblk)
+        netD = Discriminator(nch_out, nch_ker, [], ncls=ncls, ny_in=self.ny_out, nx_in=self.nx_out)
 
-        init_net(netG_a2b, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
-        init_net(netG_b2a, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
+        init_net(netG, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
+        init_net(netD, init_type='normal', init_gain=0.02, gpu_ids=gpu_ids)
 
         ## load from checkpoints
         st_epoch = 0
 
-        netG_a2b, netG_b2a, st_epoch = self.load(dir_chck, netG_a2b, netG_b2a, mode=mode)
+        netG, st_epoch = self.load(dir_chck, netG, netD, mode=mode)
 
         ## test phase
         with torch.no_grad():
-            netG_a2b.eval()
-            netG_b2a.eval()
-            # netG_a2b.train()
-            # netG_b2a.train()
+            netG.eval()
+            # netG.train()
 
-            gen_loss_l1_test = 0
             for i, data in enumerate(loader_test, 1):
-                input_a = data['dataA'].to(device)
-                input_b = data['dataB'].to(device)
+                # input = data[0]
+                # label_in = data[1].view(-1, ncls, 1, 1)
+                # label_out = torch.zeros_like(label_in)
 
-                # forward netG
-                output_b = netG_a2b(input_a)
-                output_a = netG_b2a(input_b)
+                fileset = {}
+                fileset['name'] = i
 
-                recon_b = netG_a2b(output_a)
-                recon_a = netG_b2a(output_b)
+                for j, attr in enumerate(self.attrs):
+                    input = data[0]
+                    label_in = data[1].view(-1, ncls, 1, 1)
+                    label_out = torch.zeros_like(label_in)
+                    label_out[:, j, :, :] = 1
 
-                input_a = transform_inv(input_a)
-                input_b = transform_inv(input_b)
-                output_a = transform_inv(output_a)
-                output_b = transform_inv(output_b)
-                recon_a = transform_inv(recon_a)
-                recon_b = transform_inv(recon_b)
+                    domain_out = get_domain(input, label_out)
 
-                for j in range(batch_size):
-                    name = batch_size * (i - 1) + j
-                    fileset = {'name': name,
-                               'input_a': "%04d-input_a.png" % name,
-                               'input_b': "%04d-input_b.png" % name,
-                               'output_a': "%04d-output_a.png" % name,
-                               'output_b': "%04d-output_b.png" % name,
-                               'recon_a': "%04d-recon_a.png" % name,
-                               'recon_b': "%04d-recon_b.png" % name}
+                    # Copy to GPU
+                    input = input.to(device)
+                    domain_out = domain_out.to(device)
+                    label_out = label_out.to(device)
 
-                    plt.imsave(os.path.join(dir_result_save, fileset['input_a']), input_a[j, :, :, :].squeeze())
-                    plt.imsave(os.path.join(dir_result_save, fileset['input_b']), input_b[j, :, :, :].squeeze())
-                    plt.imsave(os.path.join(dir_result_save, fileset['output_a']), output_a[j, :, :, :].squeeze())
-                    plt.imsave(os.path.join(dir_result_save, fileset['output_b']), output_b[j, :, :, :].squeeze())
-                    plt.imsave(os.path.join(dir_result_save, fileset['recon_a']), recon_a[j, :, :, :].squeeze())
-                    plt.imsave(os.path.join(dir_result_save, fileset['recon_b']), recon_b[j, :, :, :].squeeze())
+                    output = netG(torch.cat([input, domain_out], dim=1))
 
-                    append_index(dir_result, fileset)
+                    input = transform_inv(input)
+                    output = transform_inv(output)
 
-                    print("%d / %d" % (name + 1, num_test))
+                    if j == 0:
+                        fileset['input'] = '%04d-input.png' % i
+                        plt.imsave(os.path.join(dir_result_save, fileset['input']), input.squeeze())
+
+                    fileset[attr] = '%04d-output_%s.png' % (i, attr)
+                    plt.imsave(os.path.join(dir_result_save, fileset[attr]), output.squeeze())
+
+                append_index(dir_result, fileset)
+
+                print("%d / %d" % (i, num_test))
 
 
 def get_domain(input, label):
@@ -499,7 +503,9 @@ def append_index(dir_result, fileset, step=False):
         index.write("<html><body><table><tr>")
         if step:
             index.write("<th>step</th>")
-        index.write("<th>name</th><th>input_a</th><th>output_b</th><th>recon_a</th><th>input_b</th><th>output_a</th><th>recon_b</th></tr>")
+        for key, value in fileset.items():
+            index.write("<th>%s</th>" % key)
+        index.write('</tr>')
 
     # for fileset in filesets:
     index.write("<tr>")
@@ -508,8 +514,10 @@ def append_index(dir_result, fileset, step=False):
         index.write("<td>%d</td>" % fileset["step"])
     index.write("<td>%s</td>" % fileset["name"])
 
-    for kind in ["input_a", "output_b", "recon_a", "input_b", "output_a", "recon_b"]:
-        index.write("<td><img src='images/%s'></td>" % fileset[kind])
+    del fileset['name']
+
+    for key, value in fileset.items():
+        index.write("<td><img src='images/%s'></td>" % value)
 
     index.write("</tr>")
     return index_path

@@ -17,18 +17,20 @@ class Dataset(torch.utils.data.Dataset):
         self.transform = transform
         self.data_type = data_type
         self.attrs = attrs
+        self.ncls = len(self.attrs)
         self.mode = mode
 
-        data_name = data_dir.split('/')[-1]
+        # data_name = data_dir.split('/')[-1]
+        data_name = data_dir.split('\\')[-1]
 
         if data_name == 'celeba':
-            lines = [line.rstrip() for line in open(os.path.join(self.data_dir, 'list_attr_celeba.txt'), 'r')]
+            lines = [line.rstrip() for line in open(os.path.join(self.data_dir, '..\\list_attr_celeba.txt'), 'r')]
             all_attr_names = lines[1].split()
             lines = lines[2:]
 
         elif data_name == 'rafd':
             lines = os.listdir(self.data_dir)
-            all_attr_names = ['angry', 'contemptuous', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+            all_attr_names = self.attrs
 
         np.random.seed(1234)
         np.random.shuffle(lines)
@@ -63,12 +65,13 @@ class Dataset(torch.utils.data.Dataset):
 
         elif data_name == 'rafd':
             for i, line in enumerate(lines):
-                label = np.zeros(len(self.attrs), dtype=np.float32)
+                label = list(np.zeros(len(self.attrs), dtype=np.long))
                 split = line.split('_')
                 filename = line
                 attr = split[4]
 
                 label[attr2idx[attr]] = 1
+                # label = [attr2idx[attr]]
 
                 if (i + 1) <= 4000:
                     train_dataset.append([filename, label])
