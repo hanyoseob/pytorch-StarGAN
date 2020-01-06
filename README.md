@@ -39,8 +39,8 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --selected_attrs angry contemptuous disgusted fearful happy neutral sad surprised
 
 * Set **[scope name]** uniquely.
-* To understand hierarchy of directories based on their arguments, see **directories structure** below. 
 * Hyperparameters were written to **arg.txt** under the **[log directory]**.
+* To understand hierarchy of directories based on their arguments, see **directories structure** below. 
 
 
 ## Test
