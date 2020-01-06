@@ -15,19 +15,19 @@ parser = argparse.ArgumentParser(description='Train the StarGAN network',
 
 parser.add_argument('--gpu_ids', default='0', dest='gpu_ids')
 
-parser.add_argument('--mode', default='test', choices=['train', 'test'], dest='mode')
+parser.add_argument('--mode', default='train', choices=['train', 'test'], dest='mode')
 parser.add_argument('--train_continue', default='off', choices=['on', 'off'], dest='train_continue')
 
-parser.add_argument('--scope', default='stargan_with_gan', dest='scope')
+parser.add_argument('--scope', default='stargan', dest='scope')
 parser.add_argument('--norm', type=str, default='inorm', dest='norm')
-# parser.add_argument('--name_data', type=str, default='celeba', dest='name_data')
-parser.add_argument('--name_data', type=str, default='rafd', dest='name_data')
+parser.add_argument('--name_data', type=str, default='celeba', dest='name_data')
+# parser.add_argument('--name_data', type=str, default='rafd', dest='name_data')
 
 parser.add_argument('--dir_checkpoint', default='./checkpoints', dest='dir_checkpoint')
 parser.add_argument('--dir_log', default='./log', dest='dir_log')
 
 parser.add_argument('--dir_data', default='../datasets', dest='dir_data')
-parser.add_argument('--dir_result', default='./result', dest='dir_result')
+parser.add_argument('--dir_result', default='./results', dest='dir_result')
 
 parser.add_argument('--num_epoch', type=int,  default=200, dest='num_epoch')
 parser.add_argument('--batch_size', type=int, default=16, dest='batch_size')
@@ -50,10 +50,10 @@ parser.add_argument('--wgt_gp', type=float, default=1e1, dest='wgt_gp')
 parser.add_argument('--optim', default='adam', choices=['sgd', 'adam', 'rmsprop'], dest='optim')
 parser.add_argument('--beta1', default=0.5, dest='beta1')
 
-# parser.add_argument('--ny_load', type=int, default=178, dest='ny_load')
-# parser.add_argument('--nx_load', type=int, default=178, dest='nx_load')
-parser.add_argument('--ny_load', type=int, default=640, dest='ny_load')
-parser.add_argument('--nx_load', type=int, default=640, dest='nx_load')
+parser.add_argument('--ny_load', type=int, default=178, dest='ny_load')
+parser.add_argument('--nx_load', type=int, default=178, dest='nx_load')
+# parser.add_argument('--ny_load', type=int, default=640, dest='ny_load')
+# parser.add_argument('--nx_load', type=int, default=640, dest='nx_load')
 parser.add_argument('--nch_load', type=int, default=3, dest='nch_load')
 
 parser.add_argument('--ny_in', type=int, default=128, dest='ny_in')
@@ -69,11 +69,13 @@ parser.add_argument('--nch_ker', type=int, default=64, dest='nch_ker')
 parser.add_argument('--data_type', default='float32', dest='data_type')
 
 parser.add_argument('--nblk', type=int, default=6, dest='nblk')
-# parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the CelebA dataset',
-#                     default=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Male', 'Young'], dest='attrs')
-parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the RaFD dataset',
-                    default=['angry', 'contemptuous', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'], dest='attrs')
 parser.add_argument('--ncritic', type=int, default=5, dest='ncritic')
+
+parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the CelebA dataset',
+                    default=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Male', 'Young'], dest='attrs')
+# parser.add_argument('--attrs', '--list', nargs='+', help='selected attributes for the RaFD dataset',
+#                     default=['angry', 'contemptuous', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'], dest='attrs')
+
 
 PARSER = Parser(parser)
 
