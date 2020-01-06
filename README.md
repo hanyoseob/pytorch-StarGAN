@@ -52,7 +52,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --dir_checkpoint [checkpoint directory] \
                      --ny_load [size y of center crop] \
                      --nx_load [size x of center crop] \
-                     --selected_attrs [attributes type]  
+                     --selected_attrs [attributes type] \
                      --dir_result [result directory]                     
 ---
     $ python main.py --mode test \
