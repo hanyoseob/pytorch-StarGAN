@@ -436,7 +436,7 @@ class Train:
                         fileset['input'] = '%04d-input.png' % i
                         plt.imsave(os.path.join(dir_result_save, fileset['input']), input.squeeze())
 
-                    fileset[attr] = '%04d-output_%s.png' % (i, attr)
+                    fileset[attr] = '%04d-output-%s.png' % (i, attr)
                     plt.imsave(os.path.join(dir_result_save, fileset[attr]), output.squeeze())
 
                 append_index(dir_result, fileset)
