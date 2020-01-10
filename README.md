@@ -57,7 +57,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
 ---
     $ python main.py --mode test \
                      --scope pix2pix \
-                     --name_data facades \
+                     --name_data celeba \
                      --dir_data ./datasets \
                      --dir_log ./log \
                      --dir_checkpoint ./checkpoints \
@@ -68,7 +68,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
 ---
     $ python main.py --mode test \
                      --scope pix2pix \
-                     --name_data facades \
+                     --name_data rafd \
                      --dir_data ./datasets \
                      --dir_log ./log \
                      --dir_checkpoint ./checkpoints \
