@@ -6,6 +6,7 @@
 #### Abstract
 Recent studies have shown remarkable success in image-to-image translation for two domains. However, existing approaches have limited scalability and robustness in handling more than two domains, since different models should be built independently for every pair of image domains. To address this limitation, we propose StarGAN, a novel and scalable approach that can perform image-to-image translations for multiple domains using only a single model. Such a unified model architecture of StarGAN allows simultaneous training of multiple datasets with different domains within a single network. This leads to StarGAN's superior quality of translated images compared to existing models as well as the novel capability of flexibly translating an input image to any desired target domain. We empirically demonstrate the effectiveness of our approach on a facial attribute transfer and a facial expression synthesis tasks.
 
+![alt text](./img/paper1.png "Novelty of StarGAN")
         
 ## Train
     $ python main.py --mode train \
@@ -16,7 +17,8 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --dir_checkpoint [checkpoint directory] \
                      --ny_load [size y of center crop] \
                      --nx_load [size x of center crop] \
-                     --selected_attrs [attributes type]  
+                     --selected_attrs [attributes type]
+                     --gpu_ids [gpu id; '-1': no gpu, '0, 1, ..., N-1': gpus]  
 ---
     $ python main.py --mode train \
                      --scope stargan \
@@ -26,7 +28,8 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --dir_checkpoint ./checkpoint \
                      --ny_load 178 \
                      --nx_load 178 \
-                     --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young                                  
+                     --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young
+                     --gpu_ids 0                                  
 ---
     $ python main.py --mode train \
                      --scope stargan \
@@ -37,6 +40,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --ny_load 640 \
                      --nx_load 640 \
                      --selected_attrs angry contemptuous disgusted fearful happy neutral sad surprised
+                     --gpu_ids 0
 
 * Set **[scope name]** uniquely.
 * Hyperparameters were written to **arg.txt** under the **[log directory]**.
@@ -53,7 +57,8 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --ny_load [size y of center crop] \
                      --nx_load [size x of center crop] \
                      --selected_attrs [attributes type] \
-                     --dir_result [result directory]                     
+                     --dir_result [result directory]       
+                     --gpu_ids [gpu id; '-1': no gpu, '0, 1, ..., N-1': gpus]              
 ---
     $ python main.py --mode test \
                      --scope pix2pix \
@@ -65,6 +70,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --nx_load 178 \
                      --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
                      --dir_result ./results
+                     --gpu_ids 0
 ---
     $ python main.py --mode test \
                      --scope pix2pix \
@@ -76,6 +82,7 @@ Recent studies have shown remarkable success in image-to-image translation for t
                      --nx_load 640 \
                      --selected_attrs angry contemptuous disgusted fearful happy neutral sad surprised \
                      --dir_result ./results
+                     --gpu_ids 0
                      
 * To test using trained network, set **[scope name]** defined in the **train** phase.
 * Generated images are saved in the **images** subfolder along with **[result directory]** folder.
